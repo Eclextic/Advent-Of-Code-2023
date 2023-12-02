@@ -140,26 +140,26 @@ int main (int argc, char *argv[]) {
             }
         }
 
-        bool isGamePossible = true;
         std::cout << "Game " << gameId << ":" << endl;
+
+        int product = 1;
         for (const auto& [col, largest] : largestTaken) {
-            const auto& max = maxSums[col];
-            std::cout << col << ": " << largest << ", max: " << max << endl;
-
-            if (largest > max) {
-                isGamePossible = false;
-                break;
-            }
+            product *= largest;
+            std::cout << col << ": " << largest << endl;
         }
 
-        if (isGamePossible) {
-            std::cout << "Game " << gameId << " possible!" << endl;
-            sumOfAll += gameId;
-        } else {
-            std::cout << "Game " << gameId << " impossible!" << endl;
-        }
+        std::cout << "Product of these games: " << product << endl;
+
+        // if (isGamePossible) {
+        //     std::cout << "Game " << gameId << " possible!" << endl;
+        //     sumOfAll += gameId;
+        // } else {
+        //     std::cout << "Game " << gameId << " impossible!" << endl;
+        // }
 
         std::cout << endl;
+
+        sumOfAll += product;
     }
 
     std::cout << std::endl << "Sum of all possible games: " << sumOfAll << endl;
