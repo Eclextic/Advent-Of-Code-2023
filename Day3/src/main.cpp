@@ -1,15 +1,28 @@
+#include <algorithm>
 #include <cctype>
 #include <fstream>
 #include <iostream>
 #include <ostream>
+#include <set>
 #include <sstream>
 #include <string>
 #include <vector>
 
 using std::endl;
 using std::istringstream;
+using std::set;
 using std::string;
 using std::vector;
+
+struct NumLocation {
+    int start;
+    int end;
+    int column;
+
+    friend inline bool operator<(const NumLocation& lhs, const NumLocation& rhs) {
+        return lhs.start < rhs.start || lhs.column < rhs.column;
+    }
+};
 
 vector<string>* ReadFile(char* filePath) {
     vector<string>* lines = new vector<string>();
@@ -36,53 +49,57 @@ int GetNumLen(string line, int start) {
     return len + 1;
 }
 
-bool IsValidNeighbor(char c) {
-    // const string invalidNeighbors = "1234567890.";
-    // for (auto& invalid : invalidNeighbors) {
-    //     if (c == invalid) {
-    //         return false;        
-    //     }
-    // }
-    //
-    // std::cout << "Valid neighbor " << c << " found!" << endl << endl;
-    // return true;
+set<NumLocation>* AllValidNeighborsNearby(vector<string>* file, int gearX, int gearY, int maxBounds) {
+    auto* allNeighborsPos = new set<NumLocation>();
 
-    const string validNeighbors = "#$%&*+-/=@";
-    for (auto& neighbor : validNeighbors) {
-        if (neighbor == c) {
-            std::cout << "Valid neighbor " << neighbor << " found!" << endl << endl;
-            return true;
-        }
-    }
-
-    return false;
-}
-
-bool AnyValidNeighborsNearby(vector<string>* file, int digitX, int wordLength, int digitY, int maxBounds) {
-    for (int y = digitY - 1; y <= digitY + 1; y++) {
+    for (int y = gearY - 1; y <= gearY + 1; y++) {
         if (y < 0 || y > maxBounds) {
             continue;
         }
 
-        for (int x = digitX - 1; x <= digitX + wordLength; x++) {
+        for (int x = gearX - 1; x <= gearX + 1; x++) {
             if (x < 0 || x > maxBounds) {
                 continue;
             }
 
-            if (IsValidNeighbor((*file)[y][x])) {
-                return true;
+            auto line = (*file)[y];
+            auto isDigit = isdigit(line[x]);
+            if (isDigit) {
+                std::cout << line[x] << std::endl;
+
+                int start = line.find_last_not_of("1234567890", x) + 1;
+                if (start == string::npos + 1) {
+                    start = 0;
+                }
+
+                int end = line.find_first_not_of("1234567890", x);
+                if (end == string::npos) {
+                    end = line.size();
+                }
+
+                allNeighborsPos->insert(NumLocation { start, end, y });
+                for (auto& asd : *allNeighborsPos) {
+                    std::cout << "Start: " << asd.start << ", End: " << asd.end << ", Y: " << asd.column << std::endl;
+                }
             }
         }
     }
 
-    return false;
+    return allNeighborsPos;
 }
 
 int main (int argc, char *argv[]) {
     auto file = ReadFile(argv[1]);
     auto rows = (*file)[0].size();
     auto columns = file->size();
+    const string invalidNeighbors = "#$%&+-/=@."; 
 
+    for (string& i : *file) {
+        for (auto& j : invalidNeighbors) {
+            std::replace(i.begin(), i.end(), j, ' ');
+        }
+        std::cout << i << std::endl;
+    }
 
     // rows ------
     // columns |
@@ -93,26 +110,25 @@ int main (int argc, char *argv[]) {
     for (int y = 0; y < file->size(); y++) {
         std::cout << "Line number: " << y + 1 << std::endl;
 
-        int numLength = 0;
-        bool isWordValid = false;
-        int num = 0;
         for (int x = 0; x < (*file)[y].size(); x++) {
-            if (numLength - 1 > 0) {
-                numLength--;
-                continue;
-            }
-
             char c = (*file)[y][x];
 
-            if (isdigit(c)) {
-                numLength = GetNumLen((*file)[y], x);
-                num = std::stoi((*file)[y].substr(x, numLength));
-
-                std::cout << "Digit found: " << num << endl;
-
-                if (AnyValidNeighborsNearby(file, x, numLength, y, rows - 1)) {
-                    sumOfAll += num;
+            if (c == '*') {
+                auto nearbys = AllValidNeighborsNearby(file, x, y, rows);
+                if (nearbys->size() < 2) {
+                    continue;
                 }
+
+                int productOfNeighbors = 1;
+                for (auto& pos : *nearbys) {
+                    string substr = (*file)[pos.column].substr(pos.start, pos.end - pos.start);
+                    std::cout << substr << std::endl;
+                    int num = std::stoi(substr);
+                    productOfNeighbors *= num;
+                }
+
+                sumOfAll += productOfNeighbors;
+                std::cout << "Product of each gear: " << productOfNeighbors << std::endl;
             }
         }
         std::cout << std::endl;
