@@ -4,9 +4,9 @@ import (
 	"bufio"
 	"fmt"
 	"log"
-	"math"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 )
 
@@ -34,8 +34,14 @@ func ReadFirstArg() []string {
 func main() {
 	lines := ReadFirstArg()
 
-	sumOfAllPoints := 0.0
-	for i, e := range lines {
+	for i := 0; i < len(lines); i++ {
+		e := lines[i]
+
+		cardNum, err := strconv.Atoi(e[strings.IndexAny(e, "1234567890"):strings.Index(e, ":")])
+		if err != nil {
+			log.Fatal(err)
+		}
+
 		e = e[strings.Index(e, ":")+2:]
 		e = strings.ReplaceAll(e, "  ", " ")
 
@@ -46,21 +52,23 @@ func main() {
 
 		intersection := Intersection(winningNums, possessedNums)
 
-		points := math.Floor(math.Pow(2, float64(len(intersection))-1))
+		matches := len(intersection)
+		for i := 0; i < int(matches); i++ {
+			fmt.Println("Copied Card:", cardNum+i)
+			lines = append(lines, lines[cardNum+i])
+		}
 
-		fmt.Println("Card:", i+1)
+		fmt.Println("Card:", cardNum)
 		fmt.Println("Winning numbers:", winningNums)
 		fmt.Println("Possessed numbers:", possessedNums)
 		fmt.Println("Intersected numbers:", intersection)
 		fmt.Println("Number of Intersections:", len(intersection))
-		fmt.Println("Points:", points)
+		fmt.Println("Points:", matches)
 
 		fmt.Println()
-
-		sumOfAllPoints += points
 	}
 
-	fmt.Println("Sum of all Points:", sumOfAllPoints)
+	fmt.Println("All Scratchcards:", len(lines))
 }
 
 // Simple has complexity: O(n^2)
