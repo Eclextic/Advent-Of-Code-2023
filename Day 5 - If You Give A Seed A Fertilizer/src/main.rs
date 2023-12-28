@@ -78,20 +78,26 @@ fn main() {
     let file = read_arg();
     let lines: Vec<&[String]> = file.split(|str| str == "").collect();
     let seeds: Vec<i64> = lines[0][0].strip_prefix("seeds: ").expect("No prefix?").split(" ").map(|x| x.parse::<i64>().unwrap()).collect();
+    let chunked_seed_ranges: Vec<Range<i64>> = seeds.chunks_exact(2).map(|x| Range { start: x[0], end: x[0] + x[1] }).collect();
 
     let conversion_maps: Vec<_> = lines[1..].iter().map(|x| create_conversion_map(x)).collect();
 
-    let mut locations: Vec<i64> = Vec::new();
-    for seed in &seeds {
-        let mut aggregate: i64 = *seed;
-        for map in &conversion_maps {
-            if let Some(converter) = map.values.iter().find(|x| x.conversion_range.is_in_range(aggregate)) {
-                converter.convert(&mut aggregate);
+    let mut location: i64 = i64::MAX;
+    for chunk in &chunked_seed_ranges {
+        for seed in chunk.start..chunk.end {
+            let mut aggregate: i64 = seed;
+            for map in &conversion_maps {
+                if let Some(converter) = map.values.iter().find(|x| x.conversion_range.is_in_range(aggregate)) {
+                    converter.convert(&mut aggregate);
+                }
+            }
+
+            if aggregate < location {
+                location = aggregate;
             }
         }
-
-        locations.push(aggregate);
+        println!("{:?}", chunk);
     }
 
-    println!("{:?}", locations.iter().min());
+    println!("{:?}", location);
 }
