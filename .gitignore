@@ -1,5 +1,6 @@
 # Advent of Code requirement (don't commit puzzle data)
 *.input
 
-# Rust remove builds
+# Rust
 **/target/
+Cargo.lock
