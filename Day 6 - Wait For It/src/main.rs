@@ -24,68 +24,46 @@ fn read_arg() -> Vec<String> {
     }
 }
 
-fn distance(wait_time: i32, max_wait: i32) -> i32 {
+fn distance(wait_time: i64, max_wait: i64) -> i64 {
     (max_wait - wait_time) * wait_time
 }
 
-fn possible_ways(min_held_time: i32, max_held_time: i32) -> i32 {
+fn possible_ways(min_held_time: i64, max_held_time: i64) -> i64 {
     max_held_time - min_held_time + 1
 }
 
 #[derive(Debug)]
-struct Race { time: i32, dist: i32 }
+struct Race { time: i64, dist: i64 }
 
 fn main() {
     let file = read_arg();
-    let times: Vec<_> = file[0].split_whitespace().skip(1).collect();
-    let distances: Vec<_> = file[1].split_whitespace().skip(1).collect();
+    let time = file[0].strip_prefix("Time: ").unwrap().replace(" ", "");
+    let dist = file[1].strip_prefix("Distance: ").unwrap().replace(" ", "");
 
-    let races: Vec<_> = times.iter().zip(distances.iter()).map(|x| Race { time: x.0.parse().unwrap(), dist: x.1.parse().unwrap()}).collect();
+    let race = Race { time: time.parse().unwrap(), dist: dist.parse().unwrap() };
 
-    let mut possibles = vec![0; races.len()];
-
-    let mut x = 0;
-    for race in &races {
-        let mut min: i32 = 0;
-        let mut min_dist = 0;
-        for i in 1..race.time {
-            min_dist = distance(i, race.time);
-            if min_dist > race.dist {
-                min = i;
-                break;
-            }
+    let mut min: i64 = 0;
+    let mut min_dist = 0;
+    for i in 1..race.time {
+        min_dist = distance(i, race.time);
+        if min_dist > race.dist {
+            min = i;
+            break;
         }
-
-        let mut max: i32 = 0;
-        let mut max_dist = 0;
-        for i in (1..race.time).rev() {
-            max_dist = distance(i, race.time);
-            if max_dist > race.dist {
-                max = i;
-                break;
-            }
-        }
-        // let mut max: i32 = 0;
-        // let mut max_dist = 0;
-        // for i in (1..race.time).rev() {
-        //     let new_dist = distance(i, race.time);
-        //     if max_dist < new_dist {
-        //         max_dist = new_dist;
-        //     } else if max_dist > new_dist {
-        //         max = i;
-        //         break;
-        //     }
-        // }
-
-        possibles[x] = possible_ways(min, max);
-        println!("Race Number: {:?}, Minimum Distance: {:?}, Maximum Distance: {:?}, Min: {:?}, Max: {:?}", x, min_dist, max_dist, min, max);
-        println!("Possible ways of solving: {}", possibles[x]);
-        println!();
-
-        x += 1;
     }
 
-    println!("Product of possible ways to solve: {}", possibles.iter().product::<i32>());
+    let mut max: i64 = 0;
+    let mut max_dist = 0;
+    for i in (1..race.time).rev() {
+        max_dist = distance(i, race.time);
+        if max_dist > race.dist {
+            max = i;
+            break;
+        }
+    }
+
+    println!("Minimum Distance: {:?}, Maximum Distance: {:?}, Min: {:?}, Max: {:?}", min_dist, max_dist, min, max);
+    println!("Possible ways of solving: {}", possible_ways(min, max));
 }
 
 // d = (tmax - twait) * twait
